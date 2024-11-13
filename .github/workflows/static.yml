@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Szyfrowanie i Deszyfrowanie</title>
+</head>
+<body>
+  <input type="text" id="codeInput" placeholder="Wprowadź 6-cyfrowy kod">
+  <button onclick="encryptCode()">Zaszyfruj</button>
+  <button onclick="decryptCode()">Odszyfruj</button>
+  <p id="result"></p>
+
+  <script>
+    const key = crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+
+    let encryptedData;
+
+    async function encryptCode() {
+      const code = document.getElementById("codeInput").value;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(code);
+
+      // Generowanie unikalnego wektora inicjalizacji (IV)
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+
+      // Szyfrowanie danych
+      encryptedData = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        await key,
+        data
+      );
+
+      document.getElementById("result").textContent = `Zaszyfrowany kod (base64): ${btoa(String.fromCharCode(...new Uint8Array(encryptedData)))} | IV: ${btoa(String.fromCharCode(...iv))}`;
+    }
+
+    async function decryptCode() {
+      const ivBase64 = document.getElementById("result").textContent.split("| IV: ")[1];
+      const iv = new Uint8Array(atob(ivBase64).split("").map(c => c.charCodeAt(0)));
+      const encryptedArray = new Uint8Array(encryptedData);
+
+      // Odszyfrowanie danych
+      const decryptedData = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        await key,
+        encryptedArray
+      );
+
+      const decoder = new TextDecoder();
+      const originalCode = decoder.decode(decryptedData);
+
+      document.getElementById("result").textContent = `Oryginalny kod: ${originalCode}`;
+    }
+  </script>
+</body>
+</html>
