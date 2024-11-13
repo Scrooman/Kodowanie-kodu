@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odszyfrowywanie Wiadomości</title>
+    <style>
+        .hidden { display: none; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h2>Szyfrowana wiadomość</h2>
+    <p id="encryptedMessage">testowa wiadomość</p>
+
+    <h3>Wskazówki do odszyfrowania:</h3>
+    <p>Użyj klucza w formie jednego słowa, aby odszyfrować wiadomość.</p>
+
+    <label for="keyInput">Wprowadź klucz:</label>
+    <input type="text" id="keyInput" placeholder="Wprowadź klucz">
+    
+    <button onclick="decryptMessage()">Odszyfruj wiadomość</button>
+
+    <div id="progressContainer" class="hidden">
+        <h3>Postęp odszyfrowania:</h3>
+        <progress id="progressBar" value="0" max="100"></progress>
+    </div>
+
+    <h3>Odszyfrowana wiadomość:</h3>
+    <div id="outputMessage"></div>
+
+    <script>
+        const encryptedMessage = "testowa wiadomość";
+        const correctKey = "Test";
+
+        function vigenereDecrypt(text, key) {
+            const alphabet = "abcdefghijklmnopqrstuvwxyz";
+            let result = "";
+            let keyIndex = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i].toLowerCase();
+                const keyChar = key[keyIndex % key.length].toLowerCase();
+
+                if (alphabet.includes(char)) {
+                    const shift = alphabet.indexOf(keyChar);
+                    const newIndex = (alphabet.indexOf(char) - shift + 26) % 26;
+                    result += alphabet[newIndex];
+                    keyIndex++;
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        function decryptMessage() {
+            const userKey = document.getElementById("keyInput").value.trim();
+            const outputMessage = document.getElementById("outputMessage");
+            const progressContainer = document.getElementById("progressContainer");
+            const progressBar = document.getElementById("progressBar");
+
+            outputMessage.innerHTML = "";
+            progressContainer.classList.remove("hidden");
+            progressBar.value = 0;
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20;
+                progressBar.value = progress;
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    const decryptedMessage = vigenereDecrypt(encryptedMessage, userKey);
+
+                    outputMessage.innerHTML = decryptedMessage;
+                    if (userKey === correctKey) {
+                        outputMessage.innerHTML += `<p class="success">Klucz jest prawidłowy</p>`;
+                    } else {
+                        outputMessage.innerHTML += `<p class="error">Klucz jest nieprawidłowy</p>`;
+                    }
+                    progressContainer.classList.add("hidden");
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
